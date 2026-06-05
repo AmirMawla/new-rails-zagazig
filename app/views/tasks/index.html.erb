@@ -1,0 +1,314 @@
+<%# app/views/tasks/index.html.erb %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0f0f;
+      --surface:   #181818;
+      --border:    #2a2a2a;
+      --text:      #e8e4dc;
+      --muted:     #6b6b6b;
+      --accent:    #c8f04a;
+      --high:      #ff5e5e;
+      --med:       #ffb347;
+      --low:       #6bd5b8;
+      --done-bg:   #1a1a1a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 56px 64px 32px;
+      border-bottom: 1px solid var(--border);
+      gap: 24px;
+    }
+    .header-left h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .header-left h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .header-left .subtitle {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .header-stats {
+      display: flex;
+      gap: 32px;
+      padding-bottom: 4px;
+    }
+    .stat { text-align: right; }
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 2px;
+    }
+
+    /* ── Main grid ── */
+    .main { padding: 48px 64px; }
+
+    /* ── Section title ── */
+    .section-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Task list ── */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 48px;
+    }
+
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 20px;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .task-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+    }
+    .task-card.priority-high::before  { background: var(--high); }
+    .task-card.priority-medium::before { background: var(--med); }
+    .task-card.priority-low::before   { background: var(--low); }
+    .task-card:hover {
+      border-color: #3f3f3f;
+      background: #1d1d1d;
+    }
+    .task-card.status-done {
+      opacity: 0.55;
+      background: var(--done-bg);
+    }
+
+    /* Checkbox */
+    .task-check {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .status-done .task-check {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .status-done .task-check::after {
+      content: '✓';
+      font-size: 10px;
+      color: #0f0f0f;
+      font-weight: 700;
+    }
+
+    /* Body */
+    .task-body {}
+    .task-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .status-done .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .task-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Due date */
+    .task-due {
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+      text-align: right;
+    }
+    .task-due .due-label {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.6rem;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Priority badge */
+    .priority-badge {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .priority-badge.high   { background: rgba(255,94,94,0.12);  color: var(--high); }
+    .priority-badge.medium { background: rgba(255,179,71,0.12); color: var(--med);  }
+    .priority-badge.low    { background: rgba(107,213,184,0.12);color: var(--low);  }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 80px 0;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty p { font-size: 0.85rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .header { padding: 32px 24px 24px; flex-direction: column; align-items: flex-start; }
+      .main   { padding: 32px 24px; }
+      .task-card { grid-template-columns: auto 1fr; grid-template-rows: auto auto; }
+      .task-due, .priority-badge { grid-column: 2; justify-self: start; }
+      .header-stats { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<%
+  all_tasks    = @tasks
+  done_count   = all_tasks.count { |t| t.status == 'done' }
+  todo_count   = all_tasks.count { |t| t.status == 'todo' }
+  active_count = all_tasks.count { |t| t.status == 'in_progress' }
+
+  active_tasks = all_tasks.select { |t| t.status != 'done' }
+  done_tasks   = all_tasks.select { |t| t.status == 'done' }
+%>
+
+<header class="header">
+  <div class="header-left">
+    <h1>My <em>Tasks</em></h1>
+    <p class="subtitle">Personal workspace &mdash; <%= Date.today.strftime("%B %Y") %></p>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-num"><%= active_count %></div>
+      <div class="stat-label">In Progress</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><%= todo_count %></div>
+      <div class="stat-label">To Do</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color: var(--accent)"><%= done_count %></div>
+      <div class="stat-label">Done</div>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <% if active_tasks.any? %>
+    <div class="section-label">Active &mdash; <%= active_tasks.size %> tasks</div>
+    <div class="task-list">
+      <% active_tasks.each do |task| %>
+        <div class="task-card priority-<%= task.priority %> status-<%= task.status %>">
+          <div class="task-check"></div>
+
+          <div class="task-body">
+            <div class="task-title"><%= task.title %></div>
+            <div class="task-desc"><%= task.description %></div>
+          </div>
+
+          <div class="task-due">
+            <span class="due-label">Due</span>
+            <%= task.due_date %>
+          </div>
+
+          <span class="priority-badge <%= task.priority %>"><%= task.priority %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if done_tasks.any? %>
+    <div class="section-label">Completed &mdash; <%= done_tasks.size %> tasks</div>
+    <div class="task-list">
+      <% done_tasks.each do |task| %>
+        <div class="task-card priority-<%= task.priority %> status-done">
+          <div class="task-check"></div>
+
+          <div class="task-body">
+            <div class="task-title"><%= task.title %></div>
+            <div class="task-desc"><%= task.description %></div>
+          </div>
+
+          <div class="task-due">
+            <span class="due-label">Due</span>
+            <%= task.due_date %>
+          </div>
+
+          <span class="priority-badge <%= task.priority %>"><%= task.priority %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if all_tasks.empty? %>
+    <div class="empty">
+      <div class="empty-icon">✦</div>
+      <p>No tasks yet. Add some to get started.</p>
+    </div>
+  <% end %>
+
+</main>
+
+</body>
+</html>
