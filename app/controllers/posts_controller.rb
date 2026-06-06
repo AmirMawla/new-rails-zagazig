@@ -1,5 +1,6 @@
 class PostsController < ApplicationController
   # your code goes here
+  before_action :set_post, only: %i[ show edit update destroy ]
   # /posts
   def index
     @posts = Post.all
@@ -51,5 +52,9 @@ class PostsController < ApplicationController
 
   def post_params
     params.expect(post: [:title, :content])
+  end
+
+  def set_post
+    @post = Post.find(params[:id])
   end
 end
