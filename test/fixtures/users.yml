@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  DOP: 2026-06-08
+  email: MyString
+  phone_number: MyString
+
+two:
+  name: MyString
+  DOP: 2026-06-08
+  email: MyString
+  phone_number: MyString
